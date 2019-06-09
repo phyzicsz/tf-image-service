@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-package phyzics.z.tf.image.service;
+package phyzicsz.tf.image.service;
 
 import akka.actor.ActorSystem;
 import akka.stream.ActorMaterializer;
 import akka.stream.Materializer;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
-import phyzics.z.tf.image.service.http.HttpServer;
+import phyzicsz.tf.image.service.http.HttpServer;
 
 /**
  *

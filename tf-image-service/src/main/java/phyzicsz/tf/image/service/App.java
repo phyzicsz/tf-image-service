@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package phyzics.z.tf.image.service;
+package phyzicsz.tf.image.service;
 
 /**
  *

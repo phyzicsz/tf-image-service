@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package phyzics.z.tf.image.service.http;
+package phyzicsz.tf.image.service.api;
 
 /**
  *
  * @author phyzics.z <phyzics.z@gmail.com>
  */
-public class Image {
+public class ImageDetectionRequest {
     private String name;
     private byte[] bytes;
 

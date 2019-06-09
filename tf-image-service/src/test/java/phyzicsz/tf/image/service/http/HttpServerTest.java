@@ -13,8 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package phyzics.z.tf.image.service.http;
+package phyzicsz.tf.image.service.http;
 
+import phyzicsz.tf.image.service.http.HttpServer;
+import phyzicsz.tf.image.service.api.ImageDetectionRequest;
 import akka.actor.ActorSystem;
 import akka.http.javadsl.Http;
 import akka.http.javadsl.marshallers.jackson.Jackson;
@@ -66,7 +68,7 @@ public class HttpServerTest {
                 .port(port)
                 .start();
 
-        Image image = new Image();
+        ImageDetectionRequest image = new ImageDetectionRequest();
         image.setName("testImage.jpg");
         ObjectMapper mapper = new ObjectMapper();
         String json = mapper.writeValueAsString(image);
@@ -80,9 +82,9 @@ public class HttpServerTest {
                                 .withEntity(HttpEntities.create(ContentTypes.APPLICATION_JSON, json)));
         
         HttpResponse responseFuture = responseCompletion.toCompletableFuture().get(5, TimeUnit.SECONDS); 
-        CompletionStage<Image> imageCompletion = Jackson.unmarshaller(Image.class).unmarshal(responseFuture.entity(), materializer);
-        CompletableFuture<Image> imageFuture = imageCompletion.toCompletableFuture();
-        Image image2 = imageFuture.get(5, TimeUnit.SECONDS);
+        CompletionStage<ImageDetectionRequest> imageCompletion = Jackson.unmarshaller(ImageDetectionRequest.class).unmarshal(responseFuture.entity(), materializer);
+        CompletableFuture<ImageDetectionRequest> imageFuture = imageCompletion.toCompletableFuture();
+        ImageDetectionRequest image2 = imageFuture.get(5, TimeUnit.SECONDS);
         
  //       CompletionStage<Image> completion = Jackson.unmarshaller(Image.class).unmarshal(response.entity(), materializer);
  //       CompletableFuture<Image> imageFuture = completion.toCompletableFuture();

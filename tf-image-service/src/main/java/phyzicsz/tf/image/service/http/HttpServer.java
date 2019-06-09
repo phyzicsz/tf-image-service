@@ -13,12 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package phyzics.z.tf.image.service.http;
+package phyzicsz.tf.image.service.http;
 
+import phyzicsz.tf.image.service.api.ImageDetectionRequest;
 import akka.NotUsed;
 import akka.actor.ActorSystem;
-import akka.event.Logging;
-import akka.event.LoggingAdapter;
 import akka.http.javadsl.ConnectHttp;
 import akka.http.javadsl.Http;
 import akka.http.javadsl.ServerBinding;
@@ -42,7 +41,8 @@ import org.slf4j.LoggerFactory;
  * @author phyzics.z <phyzics.z@gmail.com>
  */
 public class HttpServer extends AllDirectives {
-     private static Logger logger = LoggerFactory.getLogger( HttpServer.class );
+
+    private static Logger logger = LoggerFactory.getLogger(HttpServer.class);
     private String address = "localhost";
     private Integer port = 8080;
     private CompletionStage<ServerBinding> binding;
@@ -81,18 +81,17 @@ public class HttpServer extends AllDirectives {
     }
 
     private Route createRoute() {
-        final Unmarshaller<HttpEntity, Image> unmarshaller = Jackson.unmarshaller(Image.class);
-        final Marshaller<Image, HttpResponse> marshaller = Marshaller.entityToOKResponse(Jackson.<Image>marshaller());
+        final Unmarshaller<HttpEntity, ImageDetectionRequest> unmarshaller = Jackson.unmarshaller(ImageDetectionRequest.class);
+        final Marshaller<ImageDetectionRequest, HttpResponse> marshaller = Marshaller.entityToOKResponse(Jackson.<ImageDetectionRequest>marshaller());
 
-        final Function<Image, Image> updateImage = image -> {
+        final Function<ImageDetectionRequest, ImageDetectionRequest> updateImage = image -> {
             logger.info("processing file...");
             //... some processing logic...
             //return the person
             return image;
         };
 
-       final Route route = handleWith(unmarshaller, marshaller, updateImage);
-
+        final Route route = handleWith(unmarshaller, marshaller, updateImage);
 
         return route;
     }

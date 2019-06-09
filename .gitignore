@@ -23,3 +23,6 @@
 hs_err_pid*
 /tf-image-service/target/
 /tf-image-service/nbproject/
+
+#models
+inception_models
