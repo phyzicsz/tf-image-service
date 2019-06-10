@@ -10,8 +10,10 @@ import com.google.protobuf.TextFormat;
 import com.typesafe.config.Config;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -25,6 +27,7 @@ import org.tensorflow.framework.MetaGraphDef;
 import org.tensorflow.framework.SignatureDef;
 import org.tensorflow.framework.TensorInfo;
 import org.tensorflow.types.UInt8;
+import phyzicsz.tf.image.service.api.ImageDetectionRequest;
 import phyzicsz.tf.image.service.protos.StringIntLabelMapOuterClass.StringIntLabelMap;
 import phyzicsz.tf.image.service.protos.StringIntLabelMapOuterClass.StringIntLabelMapItem;
 
@@ -34,40 +37,31 @@ import phyzicsz.tf.image.service.protos.StringIntLabelMapOuterClass.StringIntLab
  */
 public class ImageClassifier {
 
-    private final String MODEL = "models/ssd_inception_v2_coco_2017_11_17/saved_model";
-    private final String LABELS = "labels/mscoco_label_map.pbtxt";
-    private String modelPath;
-    private String labelPath;
     private String[] labels;
     private SavedModelBundle model;
-
-    public ImageClassifier(Config config) {
-        modelPath = config.getString("imageclassifier.model");
-        labelPath = config.getString("imageclassifier.labels");
-//        try {
-//            URL res = getClass().getClassLoader().getResource(MODEL);
-//            File file = Paths.get(res.toURI()).toFile();
-//            modelPath = file.getAbsolutePath();
-//
-//            res = getClass().getClassLoader().getResource(LABELS);
-//            file = Paths.get(res.toURI()).toFile();
-//            labelPath = file.getAbsolutePath();
-//        } catch (URISyntaxException ex) {
-//            Logger.getLogger(ImageClassifier.class.getName()).log(Level.SEVERE, null, ex);
-//        }
+    private final Config config;
+    
+    public ImageClassifier(final Config config){
+        this.config = config;
     }
 
+
     public ImageClassifier loadModel() throws IOException {
+        String modelPath = config.getString("image-classifier.model");
+        String labelPath = config.getString("image-classifier.labels");
+//        modelPath = new File(modelPath).getAbsolutePath();
+//        labelPath = new File(labelPath).getAbsolutePath();
+        
         labels = loadLabels(labelPath);
         model = SavedModelBundle.load(modelPath, "serve");
         printSignature(model);
         return this;
     }
 
-    public void classify(final String filename) throws IOException {
+    public void classify(final ImageDetectionRequest request) throws IOException {
 
         List<Tensor<?>> outputs = null;
-        try (Tensor<UInt8> input = makeImageTensor(filename)) {
+        try (Tensor<UInt8> input = makeImageTensor(request)) {
             outputs
                     = model
                             .session()
@@ -91,7 +85,7 @@ public class ImageClassifier {
             float[] classes = classesT.copyTo(new float[1][maxObjects])[0];
             float[][] boxes = boxesT.copyTo(new float[1][maxObjects][4])[0];
             // Print all objects whose score is at least 0.5.
-            System.out.printf("* %s\n", filename);
+            System.out.printf("* %s\n", request.getName());
             boolean foundSomething = false;
             for (int i = 0; i < scores.length; ++i) {
                 if (scores[i] < 0.5) {
@@ -107,7 +101,10 @@ public class ImageClassifier {
     }
 
     private static String[] loadLabels(String filename) throws IOException {
-        String text = new String(Files.readAllBytes(Paths.get(filename)), StandardCharsets.UTF_8);
+        File file = new File(filename);
+        System.out.println("Loading File: " + file);
+         System.out.println("File Exists: " + file.exists());
+        String text = new String(Files.readAllBytes(file.toPath()), StandardCharsets.UTF_8);
         StringIntLabelMap.Builder builder = StringIntLabelMap.newBuilder();
         TextFormat.merge(text, builder);
         StringIntLabelMap proto = builder.build();
@@ -149,13 +146,14 @@ public class ImageClassifier {
         System.out.println("-----------------------------------------------");
     }
 
-    private static Tensor<UInt8> makeImageTensor(String filename) throws IOException {
-        BufferedImage img = ImageIO.read(new File(filename));
+    private static Tensor<UInt8> makeImageTensor(final ImageDetectionRequest request) throws IOException {
+        InputStream in = new ByteArrayInputStream(request.getBytes());
+        BufferedImage img = ImageIO.read(in);
         if (img.getType() != BufferedImage.TYPE_3BYTE_BGR) {
             throw new IOException(
                     String.format(
                             "Expected 3-byte BGR encoding in BufferedImage, found %d (file: %s). This code could be made more robust",
-                            img.getType(), filename));
+                            img.getType(), request.getName()));
         }
         byte[] data = ((DataBufferByte) img.getData().getDataBuffer()).getData();
         // ImageIO.read seems to produce BGR-encoded images, but the model expects RGB.
