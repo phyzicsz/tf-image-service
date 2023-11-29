@@ -16,7 +16,7 @@
         <akka.version>2.5.23</akka.version>
         <akka.http.version>10.1.8</akka.http.version>
         <commons.io.version>2.7</commons.io.version>
-        <logback.version>1.2.3</logback.version>
+        <logback.version>1.3.12</logback.version>
         <scala.version>2.12</scala.version>
         <slf4j.version>1.7.25</slf4j.version>
         <tensorflow.version>1.4.0</tensorflow.version>
